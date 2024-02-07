@@ -12,6 +12,14 @@
     <br>
     <input type="file" id="imageFile" accept=".jpg,.jpeg" />
     <br>
+    <input type="checkbox" id="setWidth" /> 幅を指定する
+    <br>
+    <input type="number" id="imageWidth" placeholder="画像の幅 (mm)" disabled />
+    <br>
+    <input type="checkbox" id="setHeight" /> 高さを指定する
+    <br>
+    <input type="number" id="imageHeight" placeholder="画像の高さ (mm)" disabled />
+    <br>
     <button onclick="addImageToPDF()">PDFに画像を追加</button>
     <br>
 
@@ -25,6 +33,11 @@
                 reader.onerror = reject;
                 reader.readAsArrayBuffer(file);
             });
+        }
+
+        // ミリメートルをポイントに変換する関数
+        function mmToPoint(mm) {
+            return mm * 2.83465; // 1mmは約2.83465ポイント
         }
 
         async function addImageToPDF() {
@@ -45,15 +58,21 @@
             // 画像のサイズを取得
             const imageDims = image.scale(1);
 
+            // ユーザーから画像の幅と高さを取得
+            const setWidth = document.getElementById('setWidth').checked;
+            const setHeight = document.getElementById('setHeight').checked;
+            const imageWidth = setWidth ? mmToPoint(Number(document.getElementById('imageWidth').value)) : imageDims.width;
+            const imageHeight = setHeight ? mmToPoint(Number(document.getElementById('imageHeight').value)) : imageDims.height;
+
             // 新しいページを作成
-            const page = pdfDoc.addPage([imageDims.width, imageDims.height]);
+            const page = pdfDoc.addPage([imageWidth, imageHeight]);
 
             // 画像をページに追加
             page.drawImage(image, {
                 x: 0,
                 y: 0,
-                width: imageDims.width,
-                height: imageDims.height,
+                width: imageWidth,
+                height: imageHeight,
             });
 
             // PDFを書き出す
@@ -66,6 +85,14 @@
             link.download = 'output.pdf';
             link.click();
         }
+
+        // チェックボックスの状態に応じて入力フィールドの有効/無効を切り替える
+        document.getElementById('setWidth').addEventListener('change', function () {
+            document.getElementById('imageWidth').disabled = !this.checked;
+        });
+        document.getElementById('setHeight').addEventListener('change', function () {
+            document.getElementById('imageHeight').disabled = !this.checked;
+        });
     </script>
 </body>
 
