@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>PDFに画像を追加</title>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+</head>
+
+<body>
+    <p>PDFの末尾にjpeg画像を追加します。</p>
+    <input type="file" id="pdfFile" accept=".pdf" />
+    <br>
+    <input type="file" id="imageFile" accept=".jpg,.jpeg" />
+    <br>
+    <button onclick="addImageToPDF()">PDFに画像を追加</button>
+    <br>
+
+    <script>
+        let PDFDocument = PDFLib.PDFDocument;
+        // ファイルをArrayBufferとして読み込む関数
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(new Uint8Array(reader.result));
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        async function addImageToPDF() {
+            // ユーザーからPDFと画像を取得
+            const pdfFile = document.getElementById('pdfFile').files[0];
+            const imageFile = document.getElementById('imageFile').files[0];
+
+            // ファイルを読み込む
+            const pdfBytes = await readFile(pdfFile);
+            const imageBytes = await readFile(imageFile);
+
+            // PDFを読み込む
+            const pdfDoc = await PDFDocument.load(pdfBytes);
+
+            // 画像をPDFに追加
+            const image = await pdfDoc.embedJpg(imageBytes);
+
+            // 画像のサイズを取得
+            const imageDims = image.scale(1);
+
+            // 新しいページを作成
+            const page = pdfDoc.addPage([imageDims.width, imageDims.height]);
+
+            // 画像をページに追加
+            page.drawImage(image, {
+                x: 0,
+                y: 0,
+                width: imageDims.width,
+                height: imageDims.height,
+            });
+
+            // PDFを書き出す
+            const outputBytes = await pdfDoc.save();
+
+            // Blobとしてダウンロードリンクを作成
+            const blob = new Blob([outputBytes], { type: 'application/pdf' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'output.pdf';
+            link.click();
+        }
+    </script>
+</body>
+
+</html>
