@@ -7,10 +7,10 @@
 </head>
 
 <body>
-    <p>PDFの末尾にjpeg画像を追加します。</p>
+    <p>PDFの末尾にjpegまたはpng画像を追加します。</p>
     <input type="file" id="pdfFile" accept=".pdf" />
     <br>
-    <input type="file" id="imageFile" accept=".jpg,.jpeg" />
+    <input type="file" id="imageFile" accept=".jpg,.jpeg,.png" />
     <br>
     <input type="checkbox" id="setWidth" /> 幅を指定する
     <br>
@@ -53,7 +53,7 @@
             const pdfDoc = await PDFDocument.load(pdfBytes);
 
             // 画像をPDFに追加
-            const image = await pdfDoc.embedJpg(imageBytes);
+            const image = imageFile.type === 'image/png' ? await pdfDoc.embedPng(imageBytes) : await pdfDoc.embedJpg(imageBytes);
 
             // 画像のサイズを取得
             const imageDims = image.scale(1);
